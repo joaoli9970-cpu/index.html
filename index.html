@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Banco de Horas</title>
+    <title>Banco de Horas E.M.E.F. "José Sabbag"</title>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,6 @@
             flex-direction: column;
         }
 
-        /* Tela de Login */
         .login-container {
             position: fixed;
             top: 0;
@@ -121,7 +120,6 @@
             min-height: 20px;
         }
 
-        /* Conteúdo Principal (inicialmente oculto) */
         .main-content {
             display: none;
             max-width: 1400px;
@@ -161,6 +159,69 @@
             margin-bottom: 30px;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Menu de navegação */
+        .menu-container {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+
+        .menu-btn.secundario {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+        }
+
+        .menu-btn.perigo {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        }
+
+        /* Cards de conteúdo */
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .content-card.ativo {
+            display: block;
+        }
+
+        .content-card h2 {
+            color: #764ba2;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #764ba2;
+            padding-bottom: 10px;
         }
 
         .main-panel {
@@ -276,6 +337,7 @@
             padding: 20px;
             border-radius: 10px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
         }
 
         .saldo-card h3 {
@@ -294,6 +356,14 @@
 
         .saldo-card .saldo-value.negativo {
             color: #f87171;
+        }
+
+        .saldo-card-acoes {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
         }
 
         .tabela-container {
@@ -391,7 +461,6 @@
             font-weight: bold;
         }
 
-        /* Rodapé */
         .footer {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -424,14 +493,37 @@
             display: inline-block;
             margin: 0 5px;
         }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .erro-banco {
+            background-color: #fee;
+            color: #c00;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Tabela de pessoas */
+        .tabela-pessoas {
+            margin-top: 20px;
+        }
     </style>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Tela de Login -->
     <div id="loginContainer" class="login-container">
         <div class="login-box">
-            <div class="logo">🏦</div>
-            <h2>Banco de Horas</h2>
+            <div class="logo">
+                <img src="logo.png" alt="Banco de Horas" style="width: 150px; height: 150px;">
+            </div>
+            <h2>Banco de Horas EMEF"José Sabbag"</h2>
             <form id="loginForm">
                 <div class="form-group">
                     <label for="username">Usuário:</label>
@@ -444,83 +536,40 @@
                 <button type="submit">Entrar</button>
                 <div id="loginError" class="error-message"></div>
             </form>
-            <!-- Rodapé da tela de login -->
             <div class="footer-login">
                 © 2026 Desenvolvido por João_Lino
             </div>
         </div>
     </div>
 
-    <!-- Botão de Logout -->
-    <button id="logoutBtn" class="logout-btn" onclick="logout()">🚪 Sair</button>
+    <button id="logoutBtn" class="logout-btn" onclick="sair()">🚪 Sair</button>
 
-    <!-- Conteúdo Principal -->
     <div id="mainContent" class="main-content">
-        <h1>🏦 Sistema de Banco de Horas</h1>
+        <h1>🏦 Banco de Horas E.M.E.F. "José Sabbag"</h1>
 
-        <div class="main-panel">
+        <!-- Menu de navegação -->
+        <div class="menu-container">
+            <button class="menu-btn" onclick="mostrarPainel('dashboard')">
+                📊 Dashboard
+            </button>
+            <button class="menu-btn" onclick="mostrarPainel('lancamentos')">
+                ⏰ Lançar Horas
+            </button>
+            <button class="menu-btn secundario" onclick="mostrarPainel('pessoas')">
+                👥 Gerenciar Pessoas
+            </button>
+        </div>
+
+        <div id="erroBanco" class="erro-banco" style="display: none;"></div>
+
+        <!-- Painel Dashboard (sempre visível) -->
+        <div id="painelDashboard" class="content-card ativo">
+            <h2>📊 Dashboard</h2>
+            
             <!-- Painel de Saldo -->
             <div class="saldo-panel">
-                <h2>📊 Painel de Saldo</h2>
-                <div class="saldo-grid" id="saldoGrid">
-                    <!-- Saldos serão inseridos aqui via JavaScript -->
-                </div>
-            </div>
-
-            <!-- Formulários de Cadastro e Lançamento -->
-            <div class="form-container">
-                <!-- Cadastro de Pessoa -->
-                <div class="form-box">
-                    <h2>➕ Cadastrar Nova Pessoa</h2>
-                    <form id="formPessoa">
-                        <div class="form-group">
-                            <label for="nome">Nome Completo:</label>
-                            <input type="text" id="nome" required placeholder="Digite o nome completo">
-                        </div>
-                        <div class="form-group">
-                            <label for="cargo">Cargo/Função:</label>
-                            <input type="text" id="cargo" required placeholder="Digite o cargo">
-                        </div>
-                        <div class="form-group">
-                            <label for="departamento">Departamento:</label>
-                            <input type="text" id="departamento" required placeholder="Digite o departamento">
-                        </div>
-                        <button type="submit">Cadastrar Pessoa</button>
-                    </form>
-                </div>
-
-                <!-- Lançamento de Horas -->
-                <div class="form-box">
-                    <h2>⏰ Lançar Horas</h2>
-                    <form id="formLancamento">
-                        <div class="form-group">
-                            <label for="pessoaId">Selecionar Pessoa:</label>
-                            <select id="pessoaId" required>
-                                <option value="">Selecione uma pessoa</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="tipoLancamento">Tipo de Lançamento:</label>
-                            <select id="tipoLancamento" required>
-                                <option value="credito">➕ Crédito (Horas Extras)</option>
-                                <option value="debito">➖ Débito (Desconto/Horas Saída)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="dataLancamento">Data:</label>
-                            <input type="date" id="dataLancamento" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="horas">Quantidade de Horas:</label>
-                            <input type="number" id="horas" step="0.5" min="0" required placeholder="Ex: 2.5">
-                        </div>
-                        <div class="form-group">
-                            <label for="justificativa">Justificativa:</label>
-                            <textarea id="justificativa" required placeholder="Descreva a justificativa do lançamento"></textarea>
-                        </div>
-                        <button type="submit">Lançar Horas</button>
-                    </form>
-                </div>
+                <h3>Saldo por Pessoa</h3>
+                <div class="saldo-grid" id="saldoGrid"></div>
             </div>
 
             <!-- Filtros -->
@@ -539,7 +588,8 @@
                 <button onclick="limparFiltros()" class="btn-sm btn-warning">Limpar Filtros</button>
             </div>
 
-            <!-- Tabela de Pessoas e Lançamentos -->
+            <!-- Tabela de Lançamentos -->
+            <h3>Histórico de Lançamentos</h3>
             <div class="tabela-container">
                 <table id="tabelaPessoas">
                     <thead>
@@ -555,7 +605,7 @@
                         </tr>
                     </thead>
                     <tbody id="corpoTabela">
-                        <!-- Dados serão inseridos aqui via JavaScript -->
+                        <tr><td colspan="8" class="loading">Carregando dados...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -565,7 +615,86 @@
             </div>
         </div>
 
-        <!-- Rodapé do sistema -->
+        <!-- Painel de Lançamentos -->
+        <div id="painelLancamentos" class="content-card">
+            <h2>⏰ Lançar Horas</h2>
+            
+            <div class="form-box">
+                <form id="formLancamento">
+                    <div class="form-group">
+                        <label for="pessoaId">Selecionar Pessoa:</label>
+                        <select id="pessoaId" required>
+                            <option value="">Selecione uma pessoa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipoLancamento">Tipo de Lançamento:</label>
+                        <select id="tipoLancamento" required>
+                            <option value="credito">➕ Crédito (Horas Extras)</option>
+                            <option value="debito">➖ Débito (Desconto/Horas Saída)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataLancamento">Data:</label>
+                        <input type="date" id="dataLancamento" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="horas">Quantidade de Horas:</label>
+                        <input type="number" id="horas" step="0.5" min="0" required placeholder="Ex: 2.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="justificativa">Justificativa:</label>
+                        <textarea id="justificativa" required placeholder="Descreva a justificativa do lançamento"></textarea>
+                    </div>
+                    <button type="submit">Lançar Horas</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Painel de Gerenciamento de Pessoas -->
+        <div id="painelPessoas" class="content-card">
+            <h2>👥 Gerenciar Pessoas</h2>
+            
+            <!-- Formulário de Cadastro -->
+            <div class="form-box">
+                <h3>➕ Cadastrar Nova Pessoa</h3>
+                <form id="formPessoa">
+                    <div class="form-group">
+                        <label for="nome">Nome Completo:</label>
+                        <input type="text" id="nome" required placeholder="Digite o nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="cargo">Cargo/Função:</label>
+                        <input type="text" id="cargo" required placeholder="Digite o cargo">
+                    </div>
+                    <div class="form-group">
+                        <label for="departamento">Departamento:</label>
+                        <input type="text" id="departamento" required placeholder="Digite o departamento">
+                    </div>
+                    <button type="submit">Cadastrar Pessoa</button>
+                </form>
+            </div>
+
+            <!-- Lista de Pessoas Cadastradas -->
+            <h3>📋 Pessoas Cadastradas</h3>
+            <div class="tabela-container">
+                <table class="tabela-pessoas">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Cargo</th>
+                            <th>Departamento</th>
+                            <th>Data Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabelaPessoas">
+                        <tr><td colspan="5" class="loading">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="footer">
             <span class="copyright">© 2026</span>
             <span class="copyright">Desenvolvido por João_Lino</span>
@@ -574,13 +703,13 @@
         </div>
     </div>
 
-    <!-- Modal de Edição -->
-    <div id="modalEdicao" class="modal">
+    <!-- Modal de Edição de Lançamento -->
+    <div id="modalEdicaoLancamento" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="fecharModal()">&times;</span>
+            <span class="close" onclick="fecharModal('lancamento')">&times;</span>
             <h2>✏️ Editar Lançamento</h2>
-            <form id="formEdicao">
-                <input type="hidden" id="editId">
+            <form id="formEdicaoLancamento">
+                <input type="hidden" id="editLancamentoId">
                 <div class="form-group">
                     <label for="editTipo">Tipo de Lançamento:</label>
                     <select id="editTipo" required>
@@ -605,24 +734,54 @@
         </div>
     </div>
 
+    <!-- Modal de Edição de Pessoa -->
+    <div id="modalEdicaoPessoa" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal('pessoa')">&times;</span>
+            <h2>✏️ Editar Pessoa</h2>
+            <form id="formEdicaoPessoa">
+                <input type="hidden" id="editPessoaId">
+                <div class="form-group">
+                    <label for="editNome">Nome Completo:</label>
+                    <input type="text" id="editNome" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCargo">Cargo/Função:</label>
+                    <input type="text" id="editCargo" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDepartamento">Departamento:</label>
+                    <input type="text" id="editDepartamento" required>
+                </div>
+                <button type="submit">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Credenciais fixas (agora ocultas)
-        const VALID_USERNAME = 'sabbag';
-        const VALID_PASSWORD = '9960';
+        // CONFIGURAÇÃO SUPABASE
+        const URL_SUPABASE = 'https://eljctgcjuzktqyncbjue.supabase.co';
+        const CHAVE_SUPABASE = 'sb_publishable_eS0Aj3WsDcwR1eC-9IGcQQ_F2Q-N4Fx';
+        
+        // CRIAR CLIENTE
+        const banco = window.supabase.createClient(URL_SUPABASE, CHAVE_SUPABASE);
+        console.log('✅ Banco conectado');
 
-        // Estado da aplicação
-        let pessoas = JSON.parse(localStorage.getItem('pessoas')) || [];
-        let lancamentos = JSON.parse(localStorage.getItem('lancamentos')) || [];
-        let currentFilter = { pessoa: 'todas', data: '' };
+        // LOGIN
+        const USUARIO = 'sabbag';
+        const SENHA = '9960';
 
-        // Verificar se já está logado
-        function checkAuth() {
-            const isLoggedIn = sessionStorage.getItem('loggedIn') === 'true';
-            if (isLoggedIn) {
+        let pessoas = [];
+        let lancamentos = [];
+        let filtro = { pessoa: 'todas', data: '' };
+
+        // VERIFICAR LOGIN
+        function verificarLogin() {
+            if (sessionStorage.getItem('logado') === 'sim') {
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('mainContent').classList.add('visible');
                 document.getElementById('logoutBtn').style.display = 'block';
-                inicializarSistema();
+                iniciarSistema();
             } else {
                 document.getElementById('loginContainer').style.display = 'flex';
                 document.getElementById('mainContent').classList.remove('visible');
@@ -630,273 +789,427 @@
             }
         }
 
-        // Login
+        // EVENTO DE LOGIN
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorElement = document.getElementById('loginError');
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
 
-            if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-                sessionStorage.setItem('loggedIn', 'true');
-                checkAuth();
+            if (user === USUARIO && pass === SENHA) {
+                sessionStorage.setItem('logado', 'sim');
+                verificarLogin();
                 document.getElementById('username').value = '';
                 document.getElementById('password').value = '';
-                errorElement.textContent = '';
+                document.getElementById('loginError').textContent = '';
             } else {
-                errorElement.textContent = 'Usuário ou senha incorretos!';
+                document.getElementById('loginError').textContent = 'Usuário ou senha incorretos!';
                 document.getElementById('password').value = '';
             }
         });
 
-        // Logout
-        function logout() {
-            sessionStorage.removeItem('loggedIn');
-            checkAuth();
+        // SAIR
+        function sair() {
+            sessionStorage.removeItem('logado');
+            verificarLogin();
         }
 
-        // Inicializar sistema após login
-        function inicializarSistema() {
+        // MOSTRAR PAINEL
+        function mostrarPainel(painel) {
+            document.getElementById('painelDashboard').classList.remove('ativo');
+            document.getElementById('painelLancamentos').classList.remove('ativo');
+            document.getElementById('painelPessoas').classList.remove('ativo');
+            
+            document.getElementById('painel' + painel.charAt(0).toUpperCase() + painel.slice(1)).classList.add('ativo');
+        }
+
+        // INICIAR SISTEMA
+        async function iniciarSistema() {
             document.getElementById('dataLancamento').valueAsDate = new Date();
-            atualizarSelectPessoas();
-            atualizarTabela();
-            atualizarPainelSaldo();
+            await carregarDados();
         }
 
-        // Funções de armazenamento
-        function salvarDados() {
-            localStorage.setItem('pessoas', JSON.stringify(pessoas));
-            localStorage.setItem('lancamentos', JSON.stringify(lancamentos));
+        // CARREGAR DADOS
+        async function carregarDados() {
+            try {
+                // PESSOAS
+                const { data: pData, error: pError } = await banco
+                    .from('pessoas')
+                    .select('*')
+                    .order('nome');
+                
+                if (pError) throw pError;
+                
+                // LANÇAMENTOS
+                const { data: lData, error: lError } = await banco
+                    .from('lancamentos')
+                    .select('*')
+                    .order('data', { ascending: false });
+                
+                if (lError) throw lError;
+                
+                pessoas = pData || [];
+                lancamentos = lData || [];
+                
+                document.getElementById('erroBanco').style.display = 'none';
+                
+                atualizarSelects();
+                atualizarTabelaLancamentos();
+                atualizarTabelaPessoas();
+                atualizarSaldos();
+                
+            } catch (erro) {
+                document.getElementById('erroBanco').style.display = 'block';
+                document.getElementById('erroBanco').textContent = '❌ Erro no banco: ' + erro.message;
+                console.error(erro);
+            }
         }
 
-        // CRUD de Pessoas
-        document.getElementById('formPessoa').addEventListener('submit', function(e) {
+        // ATUALIZAR SELECTS
+        function atualizarSelects() {
+            const selectLancamento = document.getElementById('pessoaId');
+            const selectFiltro = document.getElementById('filtroPessoa');
+            
+            selectLancamento.innerHTML = '<option value="">Selecione</option>';
+            selectFiltro.innerHTML = '<option value="todas">Todas</option>';
+            
+            pessoas.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(p => {
+                selectLancamento.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+                selectFiltro.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+            });
+        }
+
+        // CADASTRAR PESSOA
+        document.getElementById('formPessoa').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const novaPessoa = {
+            const nova = {
                 id: Date.now(),
                 nome: document.getElementById('nome').value,
                 cargo: document.getElementById('cargo').value,
                 departamento: document.getElementById('departamento').value,
-                dataCadastro: new Date().toISOString()
+                data_cadastro: new Date().toISOString()
             };
 
-            pessoas.push(novaPessoa);
-            salvarDados();
+            const { error } = await banco.from('pessoas').insert([nova]);
             
-            this.reset();
-            atualizarSelectPessoas();
-            atualizarTabela();
-            atualizarPainelSaldo();
-            alert('Pessoa cadastrada com sucesso!');
+            if (!error) {
+                pessoas.push(nova);
+                this.reset();
+                atualizarSelects();
+                atualizarTabelaPessoas();
+                atualizarSaldos();
+                alert('✅ Pessoa cadastrada!');
+            } else {
+                alert('❌ Erro: ' + error.message);
+            }
         });
 
-        // Lançamento de Horas
-        document.getElementById('formLancamento').addEventListener('submit', function(e) {
+        // LANÇAR HORAS
+        document.getElementById('formLancamento').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const novoLancamento = {
+            const novo = {
                 id: Date.now(),
-                pessoaId: parseInt(document.getElementById('pessoaId').value),
+                pessoa_id: parseInt(document.getElementById('pessoaId').value),
                 tipo: document.getElementById('tipoLancamento').value,
                 data: document.getElementById('dataLancamento').value,
                 horas: parseFloat(document.getElementById('horas').value),
-                justificativa: document.getElementById('justificativa').value,
-                timestamp: new Date().toISOString()
+                justificativa: document.getElementById('justificativa').value
             };
 
-            lancamentos.push(novoLancamento);
-            salvarDados();
+            const { error } = await banco.from('lancamentos').insert([novo]);
             
-            this.reset();
-            document.getElementById('dataLancamento').valueAsDate = new Date();
-            atualizarTabela();
-            atualizarPainelSaldo();
-            alert('Horas lançadas com sucesso!');
-        });
-
-        // Edição de Lançamento
-        document.getElementById('formEdicao').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const id = parseInt(document.getElementById('editId').value);
-            const index = lancamentos.findIndex(l => l.id === id);
-            
-            if (index !== -1) {
-                lancamentos[index] = {
-                    ...lancamentos[index],
-                    tipo: document.getElementById('editTipo').value,
-                    data: document.getElementById('editData').value,
-                    horas: parseFloat(document.getElementById('editHoras').value),
-                    justificativa: document.getElementById('editJustificativa').value
-                };
-                
-                salvarDados();
-                fecharModal();
-                atualizarTabela();
-                atualizarPainelSaldo();
-                alert('Lançamento atualizado com sucesso!');
+            if (!error) {
+                lancamentos.unshift(novo);
+                this.reset();
+                document.getElementById('dataLancamento').valueAsDate = new Date();
+                atualizarTabelaLancamentos();
+                atualizarSaldos();
+                alert('✅ Horas lançadas!');
+            } else {
+                alert('❌ Erro: ' + error.message);
             }
         });
 
-        // Funções auxiliares
-        function atualizarSelectPessoas() {
-            const selectPessoa = document.getElementById('pessoaId');
-            const filtroPessoa = document.getElementById('filtroPessoa');
+        // ATUALIZAR TABELA DE LANÇAMENTOS
+        function atualizarTabelaLancamentos() {
+            const tbody = document.getElementById('corpoTabela');
+            const total = document.getElementById('totalGeral');
             
-            selectPessoa.innerHTML = '<option value="">Selecione uma pessoa</option>';
-            filtroPessoa.innerHTML = '<option value="todas">Todas as Pessoas</option>';
+            let lista = [...lancamentos];
             
-            pessoas.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(pessoa => {
-                selectPessoa.innerHTML += `<option value="${pessoa.id}">${pessoa.nome}</option>`;
-                filtroPessoa.innerHTML += `<option value="${pessoa.id}">${pessoa.nome}</option>`;
-            });
-        }
-
-        function atualizarPainelSaldo() {
-            const saldoGrid = document.getElementById('saldoGrid');
-            const saldos = {};
+            if (filtro.pessoa !== 'todas') {
+                lista = lista.filter(l => l.pessoa_id === parseInt(filtro.pessoa));
+            }
+            if (filtro.data) {
+                lista = lista.filter(l => l.data.startsWith(filtro.data));
+            }
             
-            // Calcular saldo por pessoa
-            lancamentos.forEach(l => {
-                if (!saldos[l.pessoaId]) {
-                    saldos[l.pessoaId] = 0;
-                }
-                
-                const horas = l.tipo === 'credito' ? l.horas : -l.horas;
-                saldos[l.pessoaId] += horas;
-            });
+            lista.sort((a, b) => b.data.localeCompare(a.data));
             
-            // Gerar cards de saldo
-            saldoGrid.innerHTML = '';
+            tbody.innerHTML = '';
             
-            if (pessoas.length === 0) {
-                saldoGrid.innerHTML = '<div class="saldo-card">Nenhuma pessoa cadastrada</div>';
+            if (lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8">Nenhum lançamento</td></tr>';
+                total.textContent = 'Total: 0';
                 return;
             }
             
-            pessoas.forEach(pessoa => {
-                const saldo = saldos[pessoa.id] || 0;
-                const saldoClass = saldo >= 0 ? 'positivo' : 'negativo';
-                const saldoFormatado = saldo.toFixed(1);
+            let soma = 0;
+            
+            lista.forEach(l => {
+                const pessoa = pessoas.find(p => p.id === l.pessoa_id);
+                if (!pessoa) return;
                 
-                saldoGrid.innerHTML += `
+                const valor = l.tipo === 'credito' ? l.horas : -l.horas;
+                soma += valor;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${pessoa.nome}</td>
+                        <td>${pessoa.cargo}</td>
+                        <td>${pessoa.departamento}</td>
+                        <td>${new Date(l.data).toLocaleDateString('pt-BR')}</td>
+                        <td>${l.tipo === 'credito' ? '➕ Crédito' : '➖ Débito'}</td>
+                        <td>${l.horas}</td>
+                        <td>${l.justificativa}</td>
+                        <td>
+                            <button onclick="editarLancamento(${l.id})" class="btn-sm btn-warning">✏️</button>
+                            <button onclick="excluirLancamento(${l.id})" class="btn-sm btn-danger">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            total.textContent = `Total: ${soma.toFixed(1)}`;
+        }
+
+        // ATUALIZAR TABELA DE PESSOAS
+        function atualizarTabelaPessoas() {
+            const tbody = document.getElementById('corpoTabelaPessoas');
+            
+            if (pessoas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">Nenhuma pessoa cadastrada</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            pessoas.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(p => {
+                const dataCadastro = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : 'N/A';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.nome}</td>
+                        <td>${p.cargo}</td>
+                        <td>${p.departamento}</td>
+                        <td>${dataCadastro}</td>
+                        <td>
+                            <button onclick="editarPessoa(${p.id})" class="btn-sm btn-warning">✏️ Editar</button>
+                            <button onclick="excluirPessoa(${p.id})" class="btn-sm btn-danger">🗑️ Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ATUALIZAR SALDOS
+        function atualizarSaldos() {
+            const grid = document.getElementById('saldoGrid');
+            const saldos = {};
+            
+            lancamentos.forEach(l => {
+                if (!saldos[l.pessoa_id]) saldos[l.pessoa_id] = 0;
+                saldos[l.pessoa_id] += l.tipo === 'credito' ? l.horas : -l.horas;
+            });
+            
+            grid.innerHTML = '';
+            
+            if (pessoas.length === 0) {
+                grid.innerHTML = '<div class="saldo-card">Nenhuma pessoa</div>';
+                return;
+            }
+            
+            pessoas.forEach(p => {
+                const saldo = saldos[p.id] || 0;
+                grid.innerHTML += `
                     <div class="saldo-card">
-                        <h3>${pessoa.nome}</h3>
-                        <p>${pessoa.cargo} - ${pessoa.departamento}</p>
-                        <div class="saldo-value ${saldoClass}">${saldoFormatado} horas</div>
+                        <h3>${p.nome}</h3>
+                        <p>${p.cargo} - ${p.departamento}</p>
+                        <div class="saldo-value ${saldo >= 0 ? 'positivo' : 'negativo'}">${saldo.toFixed(1)} h</div>
                     </div>
                 `;
             });
         }
 
-        function atualizarTabela() {
-            const tbody = document.getElementById('corpoTabela');
-            const totalGeral = document.getElementById('totalGeral');
-            
-            // Filtrar lançamentos
-            let lancamentosFiltrados = [...lancamentos];
-            
-            if (currentFilter.pessoa !== 'todas') {
-                lancamentosFiltrados = lancamentosFiltrados.filter(l => l.pessoaId === parseInt(currentFilter.pessoa));
-            }
-            
-            if (currentFilter.data) {
-                lancamentosFiltrados = lancamentosFiltrados.filter(l => l.data.startsWith(currentFilter.data));
-            }
-            
-            // Ordenar por data (mais recente primeiro)
-            lancamentosFiltrados.sort((a, b) => b.data.localeCompare(a.data));
-            
-            tbody.innerHTML = '';
-            
-            if (lancamentosFiltrados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nenhum lançamento encontrado</td></tr>';
-                totalGeral.textContent = 'Total de Horas Lançadas: 0';
-                return;
-            }
-            
-            let totalHoras = 0;
-            
-            lancamentosFiltrados.forEach(lancamento => {
-                const pessoa = pessoas.find(p => p.id === lancamento.pessoaId);
-                if (!pessoa) return;
-                
-                const tipoDisplay = lancamento.tipo === 'credito' ? '➕ Crédito' : '➖ Débito';
-                const horasValor = lancamento.tipo === 'credito' ? lancamento.horas : -lancamento.horas;
-                totalHoras += horasValor;
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${pessoa.nome}</td>
-                    <td>${pessoa.cargo}</td>
-                    <td>${pessoa.departamento}</td>
-                    <td>${new Date(lancamento.data).toLocaleDateString('pt-BR')}</td>
-                    <td>${tipoDisplay}</td>
-                    <td>${lancamento.horas.toFixed(1)}</td>
-                    <td>${lancamento.justificativa}</td>
-                    <td class="acao-buttons">
-                        <button onclick="editarLancamento(${lancamento.id})" class="btn-sm btn-warning">✏️ Editar</button>
-                        <button onclick="excluirLancamento(${lancamento.id})" class="btn-sm btn-danger">🗑️ Excluir</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            totalGeral.textContent = `Total de Horas Lançadas: ${totalHoras.toFixed(1)}`;
-        }
-
+        // FILTROS
         function aplicarFiltros() {
-            currentFilter.pessoa = document.getElementById('filtroPessoa').value;
-            currentFilter.data = document.getElementById('filtroData').value;
-            atualizarTabela();
+            filtro.pessoa = document.getElementById('filtroPessoa').value;
+            filtro.data = document.getElementById('filtroData').value;
+            atualizarTabelaLancamentos();
         }
 
         function limparFiltros() {
-            currentFilter = { pessoa: 'todas', data: '' };
+            filtro = { pessoa: 'todas', data: '' };
             document.getElementById('filtroPessoa').value = 'todas';
             document.getElementById('filtroData').value = '';
-            atualizarTabela();
+            atualizarTabelaLancamentos();
         }
 
+        // EDITAR LANÇAMENTO
         function editarLancamento(id) {
-            const lancamento = lancamentos.find(l => l.id === id);
-            if (!lancamento) return;
+            const l = lancamentos.find(x => x.id === id);
+            if (!l) return;
             
-            document.getElementById('editId').value = lancamento.id;
-            document.getElementById('editTipo').value = lancamento.tipo;
-            document.getElementById('editData').value = lancamento.data;
-            document.getElementById('editHoras').value = lancamento.horas;
-            document.getElementById('editJustificativa').value = lancamento.justificativa;
+            document.getElementById('editLancamentoId').value = l.id;
+            document.getElementById('editTipo').value = l.tipo;
+            document.getElementById('editData').value = l.data;
+            document.getElementById('editHoras').value = l.horas;
+            document.getElementById('editJustificativa').value = l.justificativa;
             
-            document.getElementById('modalEdicao').style.display = 'flex';
+            document.getElementById('modalEdicaoLancamento').style.display = 'flex';
         }
 
-        function fecharModal() {
-            document.getElementById('modalEdicao').style.display = 'none';
+        // EDITAR PESSOA
+        function editarPessoa(id) {
+            const p = pessoas.find(x => x.id === id);
+            if (!p) return;
+            
+            document.getElementById('editPessoaId').value = p.id;
+            document.getElementById('editNome').value = p.nome;
+            document.getElementById('editCargo').value = p.cargo;
+            document.getElementById('editDepartamento').value = p.departamento;
+            
+            document.getElementById('modalEdicaoPessoa').style.display = 'flex';
         }
 
-        function excluirLancamento(id) {
-            if (confirm('Tem certeza que deseja excluir este lançamento?')) {
+        // SALVAR EDIÇÃO DE LANÇAMENTO
+        document.getElementById('formEdicaoLancamento').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = parseInt(document.getElementById('editLancamentoId').value);
+            const index = lancamentos.findIndex(l => l.id === id);
+            
+            if (index === -1) return;
+            
+            const atualizado = {
+                ...lancamentos[index],
+                tipo: document.getElementById('editTipo').value,
+                data: document.getElementById('editData').value,
+                horas: parseFloat(document.getElementById('editHoras').value),
+                justificativa: document.getElementById('editJustificativa').value
+            };
+
+            const { error } = await banco.from('lancamentos').update(atualizado).eq('id', id);
+            
+            if (!error) {
+                lancamentos[index] = atualizado;
+                fecharModal('lancamento');
+                atualizarTabelaLancamentos();
+                atualizarSaldos();
+                alert('✅ Lançamento atualizado!');
+            } else {
+                alert('❌ Erro: ' + error.message);
+            }
+        });
+
+        // SALVAR EDIÇÃO DE PESSOA
+        document.getElementById('formEdicaoPessoa').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = parseInt(document.getElementById('editPessoaId').value);
+            const index = pessoas.findIndex(p => p.id === id);
+            
+            if (index === -1) return;
+            
+            const atualizado = {
+                ...pessoas[index],
+                nome: document.getElementById('editNome').value,
+                cargo: document.getElementById('editCargo').value,
+                departamento: document.getElementById('editDepartamento').value
+            };
+
+            const { error } = await banco.from('pessoas').update(atualizado).eq('id', id);
+            
+            if (!error) {
+                pessoas[index] = atualizado;
+                fecharModal('pessoa');
+                atualizarSelects();
+                atualizarTabelaPessoas();
+                atualizarSaldos();
+                alert('✅ Pessoa atualizada!');
+            } else {
+                alert('❌ Erro: ' + error.message);
+            }
+        });
+
+        // EXCLUIR LANÇAMENTO
+        async function excluirLancamento(id) {
+            if (!confirm('Excluir lançamento?')) return;
+            
+            const { error } = await banco.from('lancamentos').delete().eq('id', id);
+            
+            if (!error) {
                 lancamentos = lancamentos.filter(l => l.id !== id);
-                salvarDados();
-                atualizarTabela();
-                atualizarPainelSaldo();
-                alert('Lançamento excluído com sucesso!');
+                atualizarTabelaLancamentos();
+                atualizarSaldos();
+                alert('✅ Lançamento excluído!');
+            } else {
+                alert('❌ Erro: ' + error.message);
             }
         }
 
-        // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalEdicao');
-            if (event.target === modal) {
-                fecharModal();
+        // EXCLUIR PESSOA
+        async function excluirPessoa(id) {
+            if (!confirm('Excluir pessoa? Todas os lançamentos relacionados também serão excluídos.')) return;
+            
+            const { error } = await banco.from('pessoas').delete().eq('id', id);
+            
+            if (!error) {
+                pessoas = pessoas.filter(p => p.id !== id);
+                lancamentos = lancamentos.filter(l => l.pessoa_id !== id);
+                atualizarSelects();
+                atualizarTabelaPessoas();
+                atualizarTabelaLancamentos();
+                atualizarSaldos();
+                alert('✅ Pessoa excluída!');
+            } else {
+                alert('❌ Erro: ' + error.message);
             }
         }
 
-        // Verificar autenticação ao carregar a página
-        checkAuth();
+        // FECHAR MODAL
+        function fecharModal(tipo) {
+            if (tipo === 'lancamento') {
+                document.getElementById('modalEdicaoLancamento').style.display = 'none';
+            } else if (tipo === 'pessoa') {
+                document.getElementById('modalEdicaoPessoa').style.display = 'none';
+            }
+        }
+
+        window.onclick = function(e) {
+            if (e.target === document.getElementById('modalEdicaoLancamento')) {
+                fecharModal('lancamento');
+            }
+            if (e.target === document.getElementById('modalEdicaoPessoa')) {
+                fecharModal('pessoa');
+            }
+        };
+
+        // EXPOR FUNÇÕES GLOBAIS
+        window.sair = sair;
+        window.mostrarPainel = mostrarPainel;
+        window.aplicarFiltros = aplicarFiltros;
+        window.limparFiltros = limparFiltros;
+        window.editarLancamento = editarLancamento;
+        window.excluirLancamento = excluirLancamento;
+        window.editarPessoa = editarPessoa;
+        window.excluirPessoa = excluirPessoa;
+        window.fecharModal = fecharModal;
+
+        // INICIAR
+        verificarLogin();
     </script>
 </body>
 </html>
