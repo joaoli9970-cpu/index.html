@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <link rel="icon" href="logo.png" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Banco de Horas E.M.E.F. "José Sabbag"</title>
@@ -64,7 +65,6 @@
         .login-box .logo {
             text-align: center;
             margin-bottom: 20px;
-            font-size: 3em;
         }
 
         .login-box .form-group {
@@ -514,16 +514,131 @@
         .tabela-pessoas {
             margin-top: 20px;
         }
+
+        /* NOVOS ESTILOS PARA NOTIFICAÇÕES */
+        .notificacao-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .notificacao {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(400px);
+            animation: slideIn 0.3s forwards, fadeOut 0.3s forwards 2.7s;
+            pointer-events: auto;
+            max-width: 350px;
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+
+        .notificacao.sucesso {
+            border-left: 5px solid #4ade80;
+        }
+
+        .notificacao.erro {
+            border-left: 5px solid #f87171;
+        }
+
+        .notificacao.aviso {
+            border-left: 5px solid #fbbf24;
+        }
+
+        .notificacao-icone {
+            font-size: 24px;
+        }
+
+        .notificacao-conteudo {
+            flex: 1;
+        }
+
+        .notificacao-titulo {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .notificacao-mensagem {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .notificacao-fechar {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 5px;
+        }
+
+        .notificacao-fechar:hover {
+            color: #333;
+        }
+
+        /* Botão flutuante de voltar */
+        .btn-voltar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 99;
+            transition: transform 0.3s;
+        }
+
+        .btn-voltar:hover {
+            transform: translateY(-5px);
+        }
+
+        .btn-voltar.oculto {
+            display: none;
+        }
     </style>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    <!-- CONTAINER DE NOTIFICAÇÕES -->
+    <div id="notificacaoContainer" class="notificacao-container"></div>
+
     <div id="loginContainer" class="login-container">
         <div class="login-box">
             <div class="logo">
                 <img src="logo.png" alt="Banco de Horas" style="width: 150px; height: 150px;">
             </div>
-            <h2>Banco de Horas EMEF"José Sabbag"</h2>
+            <h2>Banco de Horas EMEF "José Sabbag"</h2>
             <form id="loginForm">
                 <div class="form-group">
                     <label for="username">Usuário:</label>
@@ -544,6 +659,11 @@
 
     <button id="logoutBtn" class="logout-btn" onclick="sair()">🚪 Sair</button>
 
+    <!-- Botão Voltar ao Dashboard -->
+    <button id="btnVoltar" class="btn-voltar oculto" onclick="voltarDashboard()">
+        <span>←</span> Voltar ao Dashboard
+    </button>
+
     <div id="mainContent" class="main-content">
         <h1>🏦 Banco de Horas E.M.E.F. "José Sabbag"</h1>
 
@@ -562,17 +682,15 @@
 
         <div id="erroBanco" class="erro-banco" style="display: none;"></div>
 
-        <!-- Painel Dashboard (sempre visível) -->
+        <!-- Painel Dashboard -->
         <div id="painelDashboard" class="content-card ativo">
             <h2>📊 Dashboard</h2>
             
-            <!-- Painel de Saldo -->
             <div class="saldo-panel">
                 <h3>Saldo por Pessoa</h3>
                 <div class="saldo-grid" id="saldoGrid"></div>
             </div>
 
-            <!-- Filtros -->
             <div class="filtros">
                 <div class="filtro-group">
                     <label for="filtroPessoa">Filtrar por Pessoa:</label>
@@ -588,7 +706,6 @@
                 <button onclick="limparFiltros()" class="btn-sm btn-warning">Limpar Filtros</button>
             </div>
 
-            <!-- Tabela de Lançamentos -->
             <h3>Histórico de Lançamentos</h3>
             <div class="tabela-container">
                 <table id="tabelaPessoas">
@@ -655,7 +772,6 @@
         <div id="painelPessoas" class="content-card">
             <h2>👥 Gerenciar Pessoas</h2>
             
-            <!-- Formulário de Cadastro -->
             <div class="form-box">
                 <h3>➕ Cadastrar Nova Pessoa</h3>
                 <form id="formPessoa">
@@ -675,7 +791,6 @@
                 </form>
             </div>
 
-            <!-- Lista de Pessoas Cadastradas -->
             <h3>📋 Pessoas Cadastradas</h3>
             <div class="tabela-container">
                 <table class="tabela-pessoas">
@@ -775,6 +890,65 @@
         let lancamentos = [];
         let filtro = { pessoa: 'todas', data: '' };
 
+        // ============================================
+        // NOVO SISTEMA DE NOTIFICAÇÕES
+        // ============================================
+        function mostrarNotificacao(tipo, titulo, mensagem) {
+            const container = document.getElementById('notificacaoContainer');
+            const id = Date.now();
+            
+            const icones = {
+                sucesso: '✅',
+                erro: '❌',
+                aviso: '⚠️'
+            };
+
+            const notificacao = document.createElement('div');
+            notificacao.className = `notificacao ${tipo}`;
+            notificacao.id = `notif-${id}`;
+            notificacao.innerHTML = `
+                <div class="notificacao-icone">${icones[tipo]}</div>
+                <div class="notificacao-conteudo">
+                    <div class="notificacao-titulo">${titulo}</div>
+                    <div class="notificacao-mensagem">${mensagem}</div>
+                </div>
+                <button class="notificacao-fechar" onclick="fecharNotificacao(${id})">×</button>
+            `;
+            
+            container.appendChild(notificacao);
+            
+            // Remover automaticamente após 3 segundos
+            setTimeout(() => {
+                const elemento = document.getElementById(`notif-${id}`);
+                if (elemento) {
+                    elemento.remove();
+                }
+            }, 3000);
+        }
+
+        function fecharNotificacao(id) {
+            const notificacao = document.getElementById(`notif-${id}`);
+            if (notificacao) {
+                notificacao.remove();
+            }
+        }
+
+        // ============================================
+        // FUNÇÕES DE NAVEGAÇÃO
+        // ============================================
+        function voltarDashboard() {
+            mostrarPainel('dashboard');
+        }
+
+        function mostrarBotaoVoltar(mostrar) {
+            const btn = document.getElementById('btnVoltar');
+            if (mostrar) {
+                btn.classList.remove('oculto');
+            } else {
+                btn.classList.add('oculto');
+            }
+        }
+
         // VERIFICAR LOGIN
         function verificarLogin() {
             if (sessionStorage.getItem('logado') === 'sim') {
@@ -802,6 +976,7 @@
                 document.getElementById('username').value = '';
                 document.getElementById('password').value = '';
                 document.getElementById('loginError').textContent = '';
+                mostrarNotificacao('sucesso', 'Bem-vindo!', 'Login realizado com sucesso.');
             } else {
                 document.getElementById('loginError').textContent = 'Usuário ou senha incorretos!';
                 document.getElementById('password').value = '';
@@ -812,6 +987,7 @@
         function sair() {
             sessionStorage.removeItem('logado');
             verificarLogin();
+            mostrarNotificacao('aviso', 'Até logo!', 'Você saiu do sistema.');
         }
 
         // MOSTRAR PAINEL
@@ -821,6 +997,9 @@
             document.getElementById('painelPessoas').classList.remove('ativo');
             
             document.getElementById('painel' + painel.charAt(0).toUpperCase() + painel.slice(1)).classList.add('ativo');
+            
+            // Mostrar botão voltar apenas se não estiver no dashboard
+            mostrarBotaoVoltar(painel !== 'dashboard');
         }
 
         // INICIAR SISTEMA
@@ -862,6 +1041,7 @@
                 document.getElementById('erroBanco').style.display = 'block';
                 document.getElementById('erroBanco').textContent = '❌ Erro no banco: ' + erro.message;
                 console.error(erro);
+                mostrarNotificacao('erro', 'Erro no banco', erro.message);
             }
         }
 
@@ -883,9 +1063,11 @@
         document.getElementById('formPessoa').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const nome = document.getElementById('nome').value;
+            
             const nova = {
                 id: Date.now(),
-                nome: document.getElementById('nome').value,
+                nome: nome,
                 cargo: document.getElementById('cargo').value,
                 departamento: document.getElementById('departamento').value,
                 data_cadastro: new Date().toISOString()
@@ -899,9 +1081,10 @@
                 atualizarSelects();
                 atualizarTabelaPessoas();
                 atualizarSaldos();
-                alert('✅ Pessoa cadastrada!');
+                mostrarNotificacao('sucesso', 'Pessoa cadastrada!', `${nome} foi adicionado(a) ao sistema.`);
+                mostrarPainel('dashboard'); // Volta para o dashboard
             } else {
-                alert('❌ Erro: ' + error.message);
+                mostrarNotificacao('erro', 'Erro ao cadastrar', error.message);
             }
         });
 
@@ -909,12 +1092,17 @@
         document.getElementById('formLancamento').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const pessoaId = parseInt(document.getElementById('pessoaId').value);
+            const pessoa = pessoas.find(p => p.id === pessoaId);
+            const horas = parseFloat(document.getElementById('horas').value);
+            const tipo = document.getElementById('tipoLancamento').value;
+            
             const novo = {
                 id: Date.now(),
-                pessoa_id: parseInt(document.getElementById('pessoaId').value),
-                tipo: document.getElementById('tipoLancamento').value,
+                pessoa_id: pessoaId,
+                tipo: tipo,
                 data: document.getElementById('dataLancamento').value,
-                horas: parseFloat(document.getElementById('horas').value),
+                horas: horas,
                 justificativa: document.getElementById('justificativa').value
             };
 
@@ -926,9 +1114,14 @@
                 document.getElementById('dataLancamento').valueAsDate = new Date();
                 atualizarTabelaLancamentos();
                 atualizarSaldos();
-                alert('✅ Horas lançadas!');
+                
+                const tipoTexto = tipo === 'credito' ? 'crédito' : 'débito';
+                const mensagem = `${horas}h de ${tipoTexto} para ${pessoa.nome}`;
+                mostrarNotificacao('sucesso', 'Horas lançadas!', mensagem);
+                
+                mostrarPainel('dashboard'); // Volta para o dashboard
             } else {
-                alert('❌ Erro: ' + error.message);
+                mostrarNotificacao('erro', 'Erro ao lançar', error.message);
             }
         });
 
@@ -1108,9 +1301,9 @@
                 fecharModal('lancamento');
                 atualizarTabelaLancamentos();
                 atualizarSaldos();
-                alert('✅ Lançamento atualizado!');
+                mostrarNotificacao('sucesso', 'Lançamento atualizado!', 'As alterações foram salvas.');
             } else {
-                alert('❌ Erro: ' + error.message);
+                mostrarNotificacao('erro', 'Erro ao atualizar', error.message);
             }
         });
 
@@ -1138,9 +1331,9 @@
                 atualizarSelects();
                 atualizarTabelaPessoas();
                 atualizarSaldos();
-                alert('✅ Pessoa atualizada!');
+                mostrarNotificacao('sucesso', 'Pessoa atualizada!', 'Os dados foram alterados.');
             } else {
-                alert('❌ Erro: ' + error.message);
+                mostrarNotificacao('erro', 'Erro ao atualizar', error.message);
             }
         });
 
@@ -1154,9 +1347,9 @@
                 lancamentos = lancamentos.filter(l => l.id !== id);
                 atualizarTabelaLancamentos();
                 atualizarSaldos();
-                alert('✅ Lançamento excluído!');
+                mostrarNotificacao('sucesso', 'Lançamento excluído!', 'O registro foi removido.');
             } else {
-                alert('❌ Erro: ' + error.message);
+                mostrarNotificacao('erro', 'Erro ao excluir', error.message);
             }
         }
 
@@ -1173,9 +1366,9 @@
                 atualizarTabelaPessoas();
                 atualizarTabelaLancamentos();
                 atualizarSaldos();
-                alert('✅ Pessoa excluída!');
+                mostrarNotificacao('sucesso', 'Pessoa excluída!', 'A pessoa foi removida do sistema.');
             } else {
-                alert('❌ Erro: ' + error.message);
+                mostrarNotificacao('erro', 'Erro ao excluir', error.message);
             }
         }
 
@@ -1207,6 +1400,8 @@
         window.editarPessoa = editarPessoa;
         window.excluirPessoa = excluirPessoa;
         window.fecharModal = fecharModal;
+        window.voltarDashboard = voltarDashboard;
+        window.fecharNotificacao = fecharNotificacao;
 
         // INICIAR
         verificarLogin();
